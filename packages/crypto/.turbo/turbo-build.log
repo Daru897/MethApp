@@ -1,0 +1,4 @@
+
+> @app/crypto@0.1.0 build C:\Users\LOQ\Desktop\MethApp\packages\crypto
+> npx tsc -p tsconfig.json
+

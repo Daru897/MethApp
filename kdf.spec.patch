@@ -1,0 +1,131 @@
+*** Begin Patch
+*** Update File: packages/crypto/test/kdf.spec.ts
+@@
+-import { describe, it, expect, vi } from 'vitest';
+-import { webcrypto } from 'crypto';
+-
+-const TEST_PIN = '1234';
+-
+-describe('deriveKdfKey', () => {
+-  it('derives a key from valid PIN (PBKDF2 fallback)', async () => {
+-    // Ensure fallback is forced BEFORE importing the module
+-    const origEnv = process.env.FORCE_PBKDF2;
+-    process.env.FORCE_PBKDF2 = 'true';
+-
+-    // dynamic import after setting env so module reads the env when called
+-    const { deriveKdfKey } = await import('../src/kdf');
+-
+-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+-
+-    const key = await deriveKdfKey(TEST_PIN);
+-
+-    expect(consoleLogSpy).toHaveBeenCalledWith('using pbkdf2 fallback');
+-
+-    consoleLogSpy.mockRestore();
+-    process.env.FORCE_PBKDF2 = origEnv;
+-  });
+-
+-  it('uses PBKDF2 when argon2 import fails', async () => {
+-    // mock argon2 to throw on import
+-    const origEnv = process.env.FORCE_PBKDF2;
+-    process.env.FORCE_PBKDF2 = 'false';
+-
+-    // Ensure node module cache doesn't have '../src/kdf' yet
+-    vi.resetModules();
+-
+-    // Mock the 'argon2' module to throw when called
+-    vi.doMock('argon2', () => {
+-      throw new Error('simulated argon2 load failure');
+-    });
+-
+-    const { deriveKdfKey } = await import('../src/kdf');
+-
+-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+-
+-    await deriveKdfKey(TEST_PIN);
+-
+-    expect(consoleLogSpy).toHaveBeenCalledWith('using pbkdf2 fallback');
+-
+-    consoleLogSpy.mockRestore();
+-
+-    // cleanup
+-    vi.doUnmock('argon2');
+-    process.env.FORCE_PBKDF2 = origEnv;
+-    vi.resetModules();
+-  });
+-
+-  it('uses PBKDF2 when FORCE_PBKDF2=true', async () => {
+-    const origEnv = process.env.FORCE_PBKDF2;
+-    process.env.FORCE_PBKDF2 = 'true';
+-
+-    vi.resetModules();
+-    const { deriveKdfKey } = await import('../src/kdf');
+-
+-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+-    await deriveKdfKey(TEST_PIN);
+-    expect(consoleLogSpy).toHaveBeenCalledWith('using pbkdf2 fallback');
+-    consoleLogSpy.mockRestore();
+-
+-    process.env.FORCE_PBKDF2 = origEnv;
+-  });
+-});
++import { describe, it, expect, vi } from 'vitest';
++import { webcrypto } from 'crypto';
++
++const TEST_PIN = '1234';
++
++describe('deriveKdfKey', () => {
++  it('derives a key from valid PIN (PBKDF2 fallback)', async () => {
++    // Force fallback BEFORE module import so the module uses PBKDF2 path.
++    const origEnv = process.env.FORCE_PBKDF2;
++    process.env.FORCE_PBKDF2 = 'true';
++    vi.resetModules();
++
++    const { deriveKdfKey } = await import('../src/kdf');
++
++    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
++    await deriveKdfKey(TEST_PIN);
++    expect(consoleLogSpy).toHaveBeenCalledWith('using pbkdf2 fallback');
++    consoleLogSpy.mockRestore();
++
++    process.env.FORCE_PBKDF2 = origEnv;
++    vi.resetModules();
++  });
++
++  it('uses PBKDF2 when argon2 import fails', async () => {
++    const origEnv = process.env.FORCE_PBKDF2;
++    process.env.FORCE_PBKDF2 = 'false';
++
++    vi.resetModules();
++    // Make the argon2 import throw so deriveKdfKey falls back to PBKDF2.
++    vi.doMock('argon2', () => {
++      throw new Error('simulated argon2 load failure');
++    });
++
++    const { deriveKdfKey } = await import('../src/kdf');
++    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
++    await deriveKdfKey(TEST_PIN);
++    expect(consoleLogSpy).toHaveBeenCalledWith('using pbkdf2 fallback');
++    consoleLogSpy.mockRestore();
++
++    vi.doUnmock('argon2');
++    process.env.FORCE_PBKDF2 = origEnv;
++    vi.resetModules();
++  });
++
++  it('uses PBKDF2 when FORCE_PBKDF2=true', async () => {
++    const origEnv = process.env.FORCE_PBKDF2;
++    process.env.FORCE_PBKDF2 = 'true';
++
++    vi.resetModules();
++    const { deriveKdfKey } = await import('../src/kdf');
++    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
++    await deriveKdfKey(TEST_PIN);
++    expect(consoleLogSpy).toHaveBeenCalledWith('using pbkdf2 fallback');
++    consoleLogSpy.mockRestore();
++
++    process.env.FORCE_PBKDF2 = origEnv;
++    vi.resetModules();
++  });
++});
+*** End Patch

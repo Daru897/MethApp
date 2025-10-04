@@ -1,0 +1,28 @@
+
+> @app/crypto@0.1.0 test C:\Users\LOQ\Desktop\MethApp\packages\crypto
+> vitest run --coverage
+
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mC:/Users/LOQ/Desktop/MethApp/packages/crypto[39m
+[2m      Coverage enabled with [22m[33mistanbul[39m
+
+ [32m✓[39m test/aes.spec.ts [2m ([22m[2m8 tests[22m[2m)[22m[90m 14[2mms[22m[39m
+ [32m✓[39m test/kdf.spec.ts [2m ([22m[2m3 tests[22m[2m)[22m[33m 409[2mms[22m[39m
+ [32m✓[39m test/keywrap.spec.ts [2m ([22m[2m8 tests[22m[2m)[22m[33m 905[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 10:11:06
+[2m   Duration [22m 1.59s[2m (transform 476ms, setup 0ms, collect 527ms, tests 1.33s, environment 1ms, prepare 628ms)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mistanbul[39m
+------------|---------|----------|---------|---------|-------------------
+File        | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+------------|---------|----------|---------|---------|-------------------
+All files   |   89.56 |    86.48 |     100 |   89.38 |                   
+ aes.ts     |     100 |      100 |     100 |     100 |                   
+ kdf.ts     |   86.84 |    86.36 |     100 |   86.48 | 27-29,43,55       
+ keywrap.ts |   96.96 |       90 |     100 |   96.96 | 81                
+ util.ts    |   76.92 |    73.91 |     100 |      76 | 13,32-33,59,62,67 
+------------|---------|----------|---------|---------|-------------------
