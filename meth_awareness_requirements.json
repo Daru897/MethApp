@@ -1,0 +1,310 @@
+{
+  "name": "MethAwarenessApp",
+  "version": "0.1.0",
+  "last_updated_ist": "2025-10-04 06:10:26 IST",
+  "product_principles": [
+    "Track events without normalizing or guiding dosing",
+    "Surface risk, recovery debt, and safety actions",
+    "Local-first, privacy-by-design, encryption by default",
+    "No bioavailability tables, no purity math, no optimization language",
+    "Retention by awareness and exit velocity, not usage enablement"
+  ],
+  "platform_decision": {
+    "phase_1": "PWA",
+    "phase_2": "Capacitor wrapper (optional)",
+    "phase_3": "Selective native upgrades only if needed",
+    "rationale": [
+      "Zero-install, mobile-browser accessible",
+      "Reuse same code when wrapping to stores",
+      "Local-first + browser crypto sufficient for MVP"
+    ]
+  },
+  "stack": {
+    "pwa": {
+      "framework": "React + TypeScript + Vite",
+      "state": "Zustand",
+      "server_state": "TanStack Query",
+      "router": "TanStack Router",
+      "storage": "IndexedDB via Dexie",
+      "crypto": "Web Crypto API (AES-GCM, PBKDF2/Argon2)",
+      "charts": "Recharts or Victory",
+      "workers": "Web Worker for risk engine",
+      "pwa": "Workbox for service worker + precache",
+      "testing": "Vitest + Playwright + Testing Library",
+      "ci": "GitHub Actions",
+      "wrapping": "Capacitor (Secure Storage, Biometric, Notifications)"
+    },
+    "backend_optional": {
+      "choice": "NestJS (TypeScript) or FastAPI (Python)",
+      "db": "PostgreSQL",
+      "message_bus": "Redis Streams or NATS",
+      "sync_style": "E2E encrypted blob replication via REST",
+      "auth": "Device keypair, magic link optional"
+    },
+    "monorepo": "Turborepo with apps/* and packages/*"
+  },
+  "modules": {
+    "profiles": "User constants, emergency contacts, privacy",
+    "sessions": "Open/close lifecycle, immutable once closed",
+    "events": "Ingestion events with route + intensity bands",
+    "checkins": "HR, anxiety, paranoia, hydration, symptoms",
+    "risk_engine": "Pure TS, deterministic, versioned outputs",
+    "reports": "Weekly/monthly; gaps, trends, streaks",
+    "insights": "Harm-reduction nudges, recovery plans",
+    "content": "Static MD/JSON guidance and SOS playbooks",
+    "sync": "E2E encrypted replication, conflict resolution",
+    "notifications": "On-device reminders (non enabling)",
+    "feature_flags": "Local/remote flags, kill switches",
+    "audit": "Copy linter, red-flag detection",
+    "ui": "Design system components and charts",
+    "utils": "Cross-cutting helpers"
+  },
+  "monorepo_layout": {
+    "apps": [
+      "web",
+      "api"
+    ],
+    "packages": [
+      "domain-profiles",
+      "domain-sessions",
+      "domain-events",
+      "domain-checkins",
+      "risk-engine",
+      "reports",
+      "insights",
+      "content",
+      "sync",
+      "notifications",
+      "feature-flags",
+      "audit",
+      "ui",
+      "utils",
+      "crypto",
+      "storage"
+    ]
+  },
+  "pwa_routing": [
+    "/onboarding",
+    "/profile",
+    "/session/open",
+    "/session/:id",
+    "/session/:id/close",
+    "/reports/weekly",
+    "/reports/monthly",
+    "/settings"
+  ],
+  "data_model": {
+    "users": {
+      "id": "uuid",
+      "profile_json_encrypted": "blob",
+      "created_at": "timestamp"
+    },
+    "sessions": {
+      "id": "uuid",
+      "start_at": "timestamp",
+      "end_at": "timestamp|null",
+      "status": "open|paused|closed",
+      "open_snapshot_json": "encrypted blob",
+      "aggregates_json": "encrypted blob",
+      "version": "int"
+    },
+    "events": {
+      "id": "uuid",
+      "session_id": "uuid",
+      "t": "timestamp",
+      "route": "oral|nasal|smoked",
+      "intensity": "very_low|low|medium|high|unknown",
+      "context_tag": "work|party|alone|commute|unknown",
+      "note": "string|null"
+    },
+    "checkins": {
+      "id": "uuid",
+      "session_id": "uuid",
+      "t": "timestamp",
+      "hr_bpm": "int|null",
+      "anxiety": "0-10|null",
+      "paranoia": "0-10|null",
+      "chest_pain": "bool",
+      "hydration_ml": "int|null",
+      "ate": "bool|null",
+      "sleepiness": "0-10|null"
+    },
+    "settings": {
+      "user_id": "uuid",
+      "privacy_opts_json": "encrypted blob",
+      "flags_json": "encrypted blob",
+      "emergency_contacts_json": "encrypted blob"
+    },
+    "risk_cache_optional": {
+      "session_id": "uuid",
+      "t": "timestamp",
+      "risk": "0-100 float",
+      "recovery_debt": "float",
+      "engine_version": "string"
+    }
+  },
+  "encryption_key_flow": {
+    "pin": "User PIN → KDF (Argon2/PBKDF2)",
+    "device_key": "Generated on device, wrapped by KDF key",
+    "data_key": "Random symmetric key wrapped by device key",
+    "storage": "Only wrapped keys stored; data encrypted at rest"
+  },
+  "risk_engine": {
+    "interface": "computeRiskTimeline(input, paramsVn) -> result",
+    "inputs": [
+      "events[]",
+      "checkins[]",
+      "profile_snapshot",
+      "session_context"
+    ],
+    "model": {
+      "impulses": "Event impulses weighted by intensity band {0.5,1.0,1.7,2.5}",
+      "decay": "Mono-exponential; half-life h_user from age/weight/sleep context",
+      "modifiers": "HR z-score, anxiety, paranoia",
+      "output": [
+        "Risk(t) 0-100",
+        "RecoveryDebt(t) arbitrary units"
+      ],
+      "aggregates": [
+        "peak",
+        "AUC",
+        "time_above_threshold"
+      ]
+    },
+    "constraints": [
+      "No dosage mg math",
+      "No purity or bioavailability inference"
+    ],
+    "versioning": "Params frozen per version; migrations Vn→Vn+1"
+  },
+  "event_bus": {
+    "topics": [
+      "session/opened",
+      "session/closed",
+      "session/paused",
+      "event/added",
+      "checkin/added",
+      "risk/updated",
+      "report/ready",
+      "flag/triggered"
+    ],
+    "plugins_listen_examples": [
+      "reports subscribes session/closed",
+      "insights subscribes risk/updated"
+    ]
+  },
+  "api_optional": {
+    "auth": "Device keypair registration; optional magic link",
+    "endpoints": [
+      "POST /sync/push",
+      "GET /sync/pull?since=cursor",
+      "GET /flags",
+      "GET /content/:slug"
+    ],
+    "payloads": "E2E encrypted ciphertext; server opaque to content"
+  },
+  "feature_flags": [
+    "checkin_reminder",
+    "lockout",
+    "recovery_only_mode",
+    "context_triggers",
+    "provider_directory",
+    "research_mode"
+  ],
+  "ui_system": {
+    "theme": "Dark, clinical, high contrast option",
+    "components": [
+      "Button",
+      "Card",
+      "Dial",
+      "Chart",
+      "Sheet",
+      "Banner",
+      "ListItem",
+      "FormField"
+    ],
+    "charts": "SVG-based, no celebratory visuals"
+  },
+  "privacy_security": {
+    "storage": "On-device encrypted IndexedDB",
+    "sync": "Opt-in, E2E encrypted; keys never leave device",
+    "logs": "Scrub sensitive fields; no route/intensity in logs unless opt-in",
+    "geolocation": "Off by default; if enabled, city-only",
+    "biometric": "Available only when wrapped via Capacitor"
+  },
+  "notifications": {
+    "pwa": "Best-effort browser notifications; not reliable",
+    "wrapped": "Local notifications via Capacitor; used for check-ins only"
+  },
+  "harm_reduction_guardrails": {
+    "language_linter": "CI step blocks enabling terms like boost, focus, optimize",
+    "delay_friction": "Warn if event within 20 minutes of previous; require confirm",
+    "lockouts": "User-enabled cool-down to block new sessions for X hours",
+    "sos": "Prominent button; local emergency contacts; offline instructions",
+    "recovery_only_mode": "Disable ingestion logging entirely if chosen"
+  },
+  "reports_longitudinal": [
+    "Weekly/monthly session counts",
+    "Median gap between sessions and streaks",
+    "Risk peak trend",
+    "Recovery debt trend",
+    "Context trigger correlations"
+  ],
+  "testing": {
+    "unit": [
+      "risk-engine golden vectors",
+      "crypto round-trip",
+      "validators and reducers"
+    ],
+    "property_tests": [
+      "More events never decreases risk",
+      "Longer gaps reduce recovery debt"
+    ],
+    "e2e": [
+      "Open session → add events → check-ins → close → reports",
+      "Offline-first load, export/import"
+    ],
+    "accessibility": [
+      "Semantic roles",
+      "Keyboard navigation",
+      "Reduced motion compliance"
+    ]
+  },
+  "cicd": {
+    "pipeline": [
+      "typecheck",
+      "lint",
+      "copy-lint",
+      "tests",
+      "build",
+      "pwa-audit (Lighthouse)"
+    ],
+    "release_channels": [
+      "alpha",
+      "beta",
+      "stable"
+    ],
+    "ota_updates": "Expo EAS when wrapped; cache-busting for PWA"
+  },
+  "extensibility": [
+    "Provider directory (offline helplines by city)",
+    "Context triggers (detect frequent 'work' tag)",
+    "Research mode (k-anonymity export)"
+  ],
+  "mvp_scope": [
+    "Profiles + settings with encryption and PIN",
+    "Session lifecycle open/close",
+    "Event logging via intensity bands",
+    "Check-ins + SOS",
+    "Risk dial + post-session summary",
+    "Weekly/monthly reports with gap metric",
+    "Encrypted export/import",
+    "Feature flags + copy linter"
+  ],
+  "coding_rules": [
+    "No cross-domain imports; communicate via event bus or interfaces",
+    "All user-visible strings in /i18n",
+    "Every feature behind a flag with removal plan",
+    "Risk-engine changes require version bump and migration note"
+  ]
+}
