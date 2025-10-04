@@ -169,16 +169,5 @@ Agentic AI	🧠 Planned
 
 “MethApp blends AI, data analytics, and strong encryption — crafted to raise awareness, ensure privacy, and empower next-gen decision systems.”
 
-yaml
-Copy code
 
 ---
-
-### ✅ Next Step
-
-After pasting:
-
-```bash
-git add README.md
-git commit -m "docs: add root-level README for MethApp monorepo"
-git push
